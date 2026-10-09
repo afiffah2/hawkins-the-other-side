@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#080910">
+<title>HAWKINS: The Other Side</title>
+<style>
+:root{--bg:#080910;--panel:#11131d;--line:#393746;--red:#f0444b;--cream:#e6dccb;--muted:#92909d;--blue:#9ac7d4}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--cream);font-family:"Courier New",monospace}button{font:inherit;cursor:pointer}
+body:after{content:"";pointer-events:none;position:fixed;inset:0;z-index:10;opacity:.08;background:repeating-linear-gradient(0deg,transparent 0 3px,#c9c9d0 4px)}
+.app{max-width:1100px;margin:auto;padding:14px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;border-bottom:1px solid #292a37;padding:8px 2px 14px;font-size:11px;letter-spacing:.1em;color:var(--muted)}.logo{color:var(--red);letter-spacing:.2em}.top b{color:var(--cream);font-weight:normal}
+.hero{text-align:center;padding:18px 0 15px}.eyebrow{font-size:10px;letter-spacing:.3em;color:#aaa2a0}h1{font:normal clamp(30px,6vw,56px)/1 Georgia,serif;letter-spacing:.06em;color:var(--red);text-shadow:0 0 18px #a41b29;margin:9px 0}.sub{font-size:11px;line-height:1.7;color:var(--muted);margin:0}
+.game-layout{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:12px;align-items:stretch}
+.game-frame{border:1px solid var(--line);background:#0a0c14;position:relative;overflow:hidden;box-shadow:0 0 35px #0008}
+canvas{display:block;width:100%;height:auto;image-rendering:pixelated;background:#0c1120;touch-action:none}
+.sidebar{display:flex;flex-direction:column;gap:10px}.panel{border:1px solid var(--line);background:var(--panel);padding:12px}.ptitle{font-size:10px;color:var(--muted);letter-spacing:.18em;margin-bottom:10px}.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stat{background:#0a0c13;padding:9px;border:1px solid #292b38}.stat span{display:block;font-size:9px;color:var(--muted);margin-bottom:5px}.stat strong{font-size:16px;color:var(--red);font-weight:normal}.inventory{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.inv{border:1px solid #30323e;background:#0b0d15;min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#656673;font-size:9px}.inv b{font-size:20px;font-weight:normal;filter:grayscale(1);display:grid;place-items:center;width:32px;height:30px;background:#17202a;border:2px solid #46505a;box-shadow:inset 0 0 0 2px #0a0c13;image-rendering:pixelated;text-shadow:2px 2px #000}.inv.found{color:var(--cream);border-color:#87505a}.inv.found b{filter:none;border-color:#c18b67;background:#34232a;box-shadow:inset 0 0 0 2px #11131d,0 0 9px #e8ad7144}.radio{font-size:11px;line-height:1.65;color:#b5b1ac;min-height:74px}.radio strong{color:var(--red);font-weight:normal}.hint{border:1px solid #55404a;color:#e5b3b2;background:#170d14;padding:9px 10px;width:100%;font-size:10px;letter-spacing:.08em}.hint:hover{background:#30121b}.note{font-size:9px;line-height:1.6;color:#737481;margin-top:9px}
+.gamebar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 2px;color:var(--muted);font-size:10px}.key{border:1px solid #45434f;padding:3px 5px;color:var(--cream)}.bottom-buttons{display:flex;gap:6px}.mini{background:none;border:1px solid #383947;color:#aaa9b1;padding:7px 9px;font-size:10px}.mini:hover{border-color:var(--red);color:white}
+.overlay{position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;text-align:center;padding:22px;background:linear-gradient(#080910d9,#080910e8);backdrop-filter:blur(2px)}.overlay-box{max-width:440px}.overlay h2{font:normal clamp(28px,5vw,43px)/1.1 Georgia,serif;color:var(--red);text-shadow:0 0 15px #9e1724;margin:9px 0 12px}.overlay p{font-size:11px;line-height:1.9;color:#c2bdba}.primary{background:#1c0d14;color:#ff696e;border:1px solid var(--red);padding:12px 20px;letter-spacing:.12em;font-size:11px;text-transform:uppercase;box-shadow:0 0 18px #b51c2a22}.primary:hover{background:#45121d}.instructions{font-size:10px;color:#9694a0;line-height:1.8;margin-top:15px}
+.character-picker{margin:14px auto 13px;max-width:390px}
+.character-label{font-size:9px;letter-spacing:.2em;color:#a7a2a6;margin-bottom:8px}
+.character-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.character{background:#10131c;border:1px solid #353744;color:#c9c1b7;padding:7px 2px 6px;min-width:0;font-size:9px;line-height:1.3}
+.character .avatar{display:block;width:25px;height:28px;margin:0 auto 5px;position:relative;background:var(--shirt,#8a343d);border:2px solid #070910;image-rendering:pixelated}
+.character .avatar:before{content:"";position:absolute;width:13px;height:11px;top:-8px;left:4px;background:var(--skin,#b28d6a);border:2px solid #070910;box-shadow:0 -4px 0 var(--hair,#30241f)}
+.character .avatar:after{content:"";position:absolute;left:2px;right:2px;bottom:-7px;height:7px;background:#20212a;border:1px solid #070910}
+.character.selected{border-color:var(--red);background:#291019;color:#fff;box-shadow:inset 0 0 12px #f0444b22}
+.character.selected .avatar{filter:drop-shadow(0 0 4px #f0444b66)}
+@media(max-width:420px){.character-grid{grid-template-columns:repeat(3,1fr)}.character{padding:6px 2px;font-size:9px}}.touch-controls{display:none;justify-content:center;align-items:center;gap:7px;padding:10px;background:#0c0e17;border-top:1px solid #292b37}.touch-controls button{width:44px;height:39px;background:#171924;border:1px solid #484553;color:var(--cream);font-size:17px}.touch-controls .wide{width:75px;font-size:10px}
+footer{text-align:center;font-size:9px;color:#5e606d;letter-spacing:.13em;padding:16px 0 6px}
+@media(max-width:760px){.game-layout{grid-template-columns:1fr}.sidebar{display:grid;grid-template-columns:1fr 1fr}.sidebar .panel:last-child{grid-column:1/-1}.touch-controls{display:flex}.gamebar{font-size:9px}.top{font-size:9px}.app{padding:9px}.panel{padding:10px}}
+@media(max-width:420px){.sidebar{grid-template-columns:1fr}.sidebar .panel:last-child{grid-column:auto}.inventory{grid-template-columns:repeat(5,1fr)}.inv{font-size:8px}.inv b{font-size:17px}.top .right{max-width:120px;text-align:right}.hero{padding-top:16px}}
+</style>
+</head>
+<body>
+<div class="app">
+ <div class="top"><div class="logo">▣ HAWKINS LAB / INCIDENT 011</div><div class="right">INDIANA · <b>1986 / 11:07 PM</b></div></div>
+ <header class="hero"><div class="eyebrow">A PIXEL-ART SURVIVAL MYSTERY</div><h1>THE OTHER SIDE</h1><p class="sub">The gate is open. The forest is watching.<br>Find the radio parts and get out before it finds you.</p></header>
+ <div class="game-layout">
+  <section class="game-frame">
+   <canvas id="game" width="640" height="400" aria-label="Pixel game area"></canvas>
+   <div class="overlay" id="overlay"><div class="overlay-box"><div class="eyebrow">HAWKINS, INDIANA · NIGHT 01</div><h2 id="ovTitle">Something followed you home.</h2><p id="ovText">Your walkie-talkie is broken. Three radio parts are scattered through the woods. Collect them, avoid the creature, and reach the glowing gate.</p><div class="character-picker">
+    <div class="character-label">CHOOSE YOUR CHARACTER</div>
+    <div class="character-grid" id="characterGrid">
+      <button class="character selected" data-character="eleven" style="--shirt:#8a343d;--hair:#49352b"><span class="avatar"></span>Eleven</button>
+      <button class="character" data-character="will" style="--shirt:#a07a48;--hair:#49352b"><span class="avatar"></span>Will</button>
+      <button class="character" data-character="dustin" style="--shirt:#567e8c;--hair:#8b603b"><span class="avatar"></span>Dustin</button>
+      <button class="character" data-character="lucas" style="--shirt:#5a7049;--hair:#241d1b"><span class="avatar"></span>Lucas</button>
+      <button class="character" data-character="max" style="--shirt:#bd654b;--hair:#b35d35"><span class="avatar"></span>Max</button>
+      <button class="character" data-character="billy" style="--shirt:#52708c;--hair:#d0a05c"><span class="avatar"></span>Billy</button>
+      <button class="character" data-character="steve" style="--shirt:#9a764b;--hair:#70472d"><span class="avatar"></span>Steve</button>
+      <button class="character" data-character="robin" style="--shirt:#71908b;--hair:#d2bd8b"><span class="avatar"></span>Robin</button>
+      <button class="character" data-character="nancy" style="--shirt:#6f6d8f;--hair:#8a5739"><span class="avatar"></span>Nancy</button>
+    </div>
+  </div>
+  <button class="primary" id="start">ENTER THE WOODS</button><div class="instructions">MOVE <span class="key">WASD</span> / <span class="key">← ↑ ↓ →</span> &nbsp; · &nbsp; COLLECT PARTS &nbsp; · &nbsp; FIND THE GATE</div></div></div>
+   <div class="touch-controls" aria-label="Touch controls"><button data-dir="up">↑</button><button data-dir="left">←</button><button data-dir="down">↓</button><button data-dir="right">→</button><button class="wide" id="touchAction">HIDE</button></div>
+  </section>
+  <aside class="sidebar">
+   <div class="panel"><div class="ptitle">SURVIVAL STATUS</div><div class="stats"><div class="stat"><span>HEARTS</span><strong id="hearts">♥ ♥ ♥</strong></div><div class="stat"><span>RADIO PARTS</span><strong id="parts">0 / 3</strong></div><div class="stat"><span>FLASHLIGHT</span><strong id="battery">100%</strong></div><div class="stat"><span>TIME</span><strong id="time">00:00</strong></div></div></div>
+   <div class="panel"><div class="ptitle">YOUR INVENTORY</div><div class="inventory"><div class="inv" id="inv-radio"><b>📻</b>Radio coil</div><div class="inv" id="inv-battery"><b>🔋</b>Battery</div><div class="inv" id="inv-fuse"><b>⚡</b>Fuse</div></div><div class="note">The radio won't work without all three parts.</div></div>
+   <div class="panel"><div class="ptitle">WALKIE-TALKIE / STATIC</div><div class="radio" id="radio"><strong>UNKNOWN:</strong> ...hello? If you can hear this, stay away from the red vines. Don't let it see you.</div><button class="hint" id="hint">PING THE RADIO · 1 CLUE</button><div class="note">The signal grows stronger near missing parts. Watch the red glow.</div></div>
+  </aside>
+ </div>
+ <div class="gamebar"><span><span class="key">SPACE</span> hide in a bush &nbsp; <span class="key">R</span> restart</span><div class="bottom-buttons"><button class="mini" id="sound">SOUND: OFF</button><button class="mini" id="restart">RESTART ↻</button></div></div>
+ <footer>KEEP YOUR LIGHT CLOSE · KEEP YOUR FRIENDS CLOSER · HAWKINS ARCADE</footer>
+</div>
+<script>
+(()=>{
+const c=document.getElementById('game'),ctx=c.getContext('2d');ctx.imageSmoothingEnabled=false;
+const W=640,H=400,T=20,cols=32,rows=20;
+const map=[
+"################################",
+"#....T......#.......T..........#",
+"#.##........#..####............#",
+"#...........#.............T....#",
+"#..T....####....T...............#",
+"#.......#...........#####.......#",
+"#..####.#..T....................#",
+"#......##.............T.........#",
+"#..............####.............#",
+"#.T................#.......T....#",
+"#........T.........#.............#",
+"#....#####.......................#",
+"#.............T.......####.......#",
+"#..T..................#...........#",
+"#........####.........#.....T.....#",
+"#...........#.....................#",
+"#..T........#.......T..............#",
+"#...........#.....................#",
+"#.................................#",
+"################################"
+];
+let player,monster,monsters=[],items,gate,playing=false,won=false,gameover=false,frame=0,parts=0,hearts=3,battery=100,clues=1,startTime=0,hide=0,invuln=0,soundOn=false,keys={},lastTime=0,bossAwake=false;
+let selectedCharacter='eleven';
+const characterLooks={
+ eleven:{shirt:'#8a343d',skin:'#b28d6a',hair:'#49352b',name:'Eleven'},
+ will:{shirt:'#a07a48',skin:'#c28f70',hair:'#49352b',name:'Will'},
+ dustin:{shirt:'#567e8c',skin:'#c28e68',hair:'#8b603b',name:'Dustin'},
+ lucas:{shirt:'#5a7049',skin:'#9c684b',hair:'#241d1b',name:'Lucas'},
+ max:{shirt:'#bd654b',skin:'#d3a17b',hair:'#b35d35',name:'Max'},
+ billy:{shirt:'#52708c',skin:'#d0a17d',hair:'#d0a05c',name:'Billy'},
+ steve:{shirt:'#9a764b',skin:'#c99370',hair:'#70472d',name:'Steve'},
+ robin:{shirt:'#71908b',skin:'#e0b18a',hair:'#d2bd8b',name:'Robin'},
+ nancy:{shirt:'#6f6d8f',skin:'#e0b18a',hair:'#8a5739',name:'Nancy'}
+};
+function reset(){
+ player={x:1*T+10,y:1*T+10,speed:2.1,face:1};
+ monster={x:28*T,y:3*T,alert:0,stun:0,type:'demogorgon',name:'Demogorgon'};
+ monsters=[
+  monster,
+  {x:25*T,y:15*T,alert:0,stun:0,type:'demodog',name:'Demodog'},
+  {x:18*T,y:2*T,alert:0,stun:0,type:'demodog',name:'Demodog'},
+  {x:5*T,y:17*T,alert:0,stun:0,type:'vines',name:'Living Vines'},
+  {x:27*T,y:8*T,alert:0,stun:0,type:'demogorgon',name:'Demogorgon'}
+ ];
+ bossAwake=false;
+ items=[{id:'radio',x:7*T+5,y:3*T+5,got:false},{id:'battery',x:22*T+5,y:11*T+5,got:false},{id:'fuse',x:12*T+5,y:16*T+5,got:false}];
+ gate={x:29*T,y:18*T};playing=false;won=false;gameover=false;frame=0;parts=0;hearts=3;battery=100;clues=1;hide=0;invuln=0;keys={};startTime=0;
+ document.getElementById('overlay').style.display='flex';document.getElementById('ovTitle').textContent='Something followed you home.';document.getElementById('ovText').textContent='Your walkie-talkie is broken. Demogorgons and Demodogs stalk the woods, living vines block your path, and something much worse is waiting. Collect all 3 radio parts and reach the gate before Vecna finds you.';document.getElementById('start').textContent='ENTER THE WOODS';document.getElementById('hint').textContent='PING THE RADIO · 1 CLUE';updateUI();draw();
+}
+function wall(x,y){let tx=Math.floor(x/T),ty=Math.floor(y/T);return ty<0||ty>=rows||tx<0||tx>=cols||map[ty][tx]==='#';}
+function blocked(x,y,r=6){return wall(x-r,y-r)||wall(x+r,y-r)||wall(x-r,y+r)||wall(x+r,y+r);}
+function move(dx,dy){if(!playing||gameover||won)return;let nx=player.x+dx,ny=player.y+dy;if(!blocked(nx,player.y,5))player.x=nx;if(!blocked(player.x,ny,5))player.y=ny;if(dx)player.face=Math.sign(dx);}
+function draw(){
+ ctx.clearRect(0,0,W,H);
+ // night sky / floor
+ ctx.fillStyle='#0b1220';ctx.fillRect(0,0,W,H);
+ for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+  const ch=map[y][x],px=x*T,py=y*T;
+  ctx.fillStyle=((x+y)%2)?'#111a25':'#101824';ctx.fillRect(px,py,T,T);
+  if(ch==='#'){ctx.fillStyle='#071019';ctx.fillRect(px,py,T,T);ctx.fillStyle='#18252b';ctx.fillRect(px+2,py+3,16,7);ctx.fillStyle='#0a1018';ctx.fillRect(px+5,py+10,10,8);ctx.fillStyle='#26302e';ctx.fillRect(px+3,py+1,14,2);}
+  else if(ch==='T'){tree(px+10,py+13);}
+  else if((x*13+y*7)%19===0){ctx.fillStyle='#35403b';ctx.fillRect(px+5,py+7,2,2);}
+ }
+ // moonlight pools
+ glow(gate.x,gate.y,55,'#a9dbe0',.13);
+ // portal
+ glow(gate.x,gate.y,38,'#e72d3e',.28);ctx.strokeStyle='#ee3545';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(gate.x,gate.y,13+Math.sin(frame*.07)*2,17,0,0,Math.PI*2);ctx.stroke();ctx.strokeStyle='#79222d';ctx.beginPath();ctx.ellipse(gate.x,gate.y,20,25,0,0,Math.PI*2);ctx.stroke();
+ // vines toward gate
+ ctx.strokeStyle='#69202c';ctx.lineWidth=2;for(let i=0;i<5;i++){ctx.beginPath();ctx.moveTo(gate.x-40+i*13,gate.y+30);ctx.quadraticCurveTo(gate.x-15+i*10,gate.y+3,gate.x-25+i*11,gate.y-17);ctx.stroke();}
+ // collectibles
+ items.forEach(it=>{if(it.got)return;glow(it.x,it.y,20,'#e4bd75',.16);ctx.fillStyle='#e5c88b';ctx.fillRect(it.x-5,it.y-5,10,10);ctx.fillStyle='#fff0c4';ctx.fillRect(it.x-2,it.y-2,4,4);ctx.fillStyle='#4b3434';ctx.fillRect(it.x-2,it.y+6,4,3);});
+ // hiding bushes
+ for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)if(map[y][x]==='T'&&(x+y)%2===0){ctx.fillStyle='#20372e';ctx.fillRect(x*T+2,y*T+13,16,5);}
+ // The Upside Down is crawling with things.
+ if(playing&&!won&&!gameover){
+  monsters.forEach(m=>{
+   let d=Math.hypot(player.x-m.x,player.y-m.y);
+   let range=m.type==='vecna'?260:(m.type==='vines'?115:190);
+   if(d<range){
+    m.alert=Math.min(1,m.alert+.009);
+    if(hide<=0&&m.stun<=0){
+     let speed=(m.type==='vecna'?.72:m.type==='demogorgon'?.63:m.type==='demodog'?.9:.42)+m.alert*.32;
+     let dx=player.x-m.x,dy=player.y-m.y,len=Math.hypot(dx,dy)||1;
+     let nx=m.x+dx/len*speed,ny=m.y+dy/len*speed;
+     if(!blocked(nx,m.y,m.type==='vecna'?10:7))m.x=nx;
+     if(!blocked(m.x,ny,m.type==='vecna'?10:7))m.y=ny;
+    }
+   } else m.alert=Math.max(0,m.alert-.002);
+   if(d<(m.type==='vecna'?25:17)&&invuln<=0&&hide<=0){
+    hearts--;invuln=95;m.stun=38;
+    // A hit knocks the nearest threat away just enough to escape.
+    let dx=m.x-player.x,dy=m.y-player.y,len=Math.hypot(dx,dy)||1;
+    m.x=Math.max(T*2,Math.min(W-T*2,m.x+dx/len*35));
+    m.y=Math.max(T*2,Math.min(H-T*2,m.y+dy/len*35));
+    if(hearts<=0)endGame(false);
+    updateUI();
+    say(m.type==='vecna'?'VECNA HAS FOUND YOU. RUN.':'Something grabbed you! Hide before the pack surrounds you!');
+   }
+  });
+  // Vecna wakes after the radio is nearly repaired.
+  if(parts>=2&&!bossAwake){
+   bossAwake=true;
+   monsters.push({x:29*T,y:16*T,alert:0,stun:0,type:'vecna',name:'Vecna'});
+   say('THE CLOCK STRIKES. Vecna is awake. Keep moving and do not let him reach you.');
+  }
+ }
+ monsters.forEach(m=>drawMonster(m.x,m.y,m));
+ // player flashlight cone
+ if(playing){ctx.save();ctx.globalCompositeOperation='screen';let fx=player.x+player.face*65;let grad=ctx.createRadialGradient(fx,player.y,2,fx,player.y,92);grad.addColorStop(0,'#c7d6b522');grad.addColorStop(1,'#c7d6b500');ctx.fillStyle=grad;ctx.beginPath();ctx.arc(fx,player.y,92,0,Math.PI*2);ctx.fill();ctx.restore();}
+ drawPlayer(player.x,player.y);
+ // darkness vignette
+ let vg=ctx.createRadialGradient(player.x,player.y,60,player.x,player.y,280);vg.addColorStop(0,'#03040a00');vg.addColorStop(1,'#02030abf');ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
+ // hud
+ ctx.fillStyle='#070910bb';ctx.fillRect(8,8,160,23);ctx.strokeStyle='#44404a';ctx.strokeRect(8,8,160,23);ctx.fillStyle='#d6cbbb';ctx.font='10px Courier New';ctx.fillText('HAWKINS WOODS',16,23);
+ if(hide>0){ctx.fillStyle='#9ac7d4';ctx.fillText('HIDDEN',570,23);}
+}
+function tree(x,y){ctx.fillStyle='#172c27';ctx.beginPath();ctx.moveTo(x,y-12);ctx.lineTo(x-10,y+7);ctx.lineTo(x-4,y+7);ctx.lineTo(x-12,y+14);ctx.lineTo(x+12,y+14);ctx.lineTo(x+4,y+7);ctx.lineTo(x+10,y+7);ctx.closePath();ctx.fill();ctx.fillStyle='#35271f';ctx.fillRect(x-2,y+13,4,5);}
+function glow(x,y,r,color,a){ctx.save();ctx.globalAlpha=a;let g=ctx.createRadialGradient(x,y,1,x,y,r);g.addColorStop(0,color);g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2);ctx.restore();}
+function drawPlayer(x,y){
+ const look=characterLooks[selectedCharacter]||characterLooks.eleven;
+ ctx.save();if(invuln>0&&Math.floor(frame/5)%2===0)ctx.globalAlpha=.4;
+ // chunky pixel-art body, hair and face vary with selected character
+ ctx.fillStyle='#11131a';ctx.fillRect(x-6,y-4,12,11);
+ ctx.fillStyle=look.skin;ctx.fillRect(x-4,y-11,8,8);
+ ctx.fillStyle=look.hair;
+ if(selectedCharacter==='eleven'){ctx.fillRect(x-5,y-13,10,3);ctx.fillRect(x-6,y-10,2,5);}
+ else if(selectedCharacter==='dustin'){ctx.fillRect(x-6,y-14,12,5);ctx.fillRect(x-7,y-10,14,3);}
+ else if(selectedCharacter==='max'||selectedCharacter==='robin'||selectedCharacter==='nancy'){ctx.fillRect(x-5,y-14,10,4);ctx.fillRect(x-6,y-10,2,5);ctx.fillRect(x+4,y-10,2,5);}
+ else {ctx.fillRect(x-5,y-14,10,4);ctx.fillRect(x-6,y-11,2,4);}
+ ctx.fillStyle='#17151a';ctx.fillRect(x-2,y-8,2,2);ctx.fillRect(x+2,y-8,2,2);
+ ctx.fillStyle=look.shirt;ctx.fillRect(x-7,y-3,14,8);
+ ctx.fillStyle='#20212a';ctx.fillRect(x-5,y+7,4,5);ctx.fillRect(x+2,y+7,4,5);
+ ctx.fillStyle='#e7c66e';ctx.fillRect(x+player.face*7,y-2,3,3);ctx.restore();
+}
+function drawMonster(x,y,m){
+ ctx.save();
+ const type=m.type||'demogorgon';
+ const color=type==='vecna'?'#b75c8b':type==='demodog'?'#d04a3c':type==='vines'?'#8b2538':'#b21f35';
+ glow(x,y,m.alert?type==='vecna'?90:62:30,color,m.alert?.3:.1);
+ if(type==='vecna'){
+  // Tall, spindly Vecna silhouette with pulsing red clock-like aura.
+  ctx.fillStyle='#42213b';ctx.fillRect(x-7,y-13,14,25);
+  ctx.fillStyle='#8d496e';ctx.fillRect(x-5,y-17,10,8);ctx.fillRect(x-11,y-8,4,16);ctx.fillRect(x+7,y-8,4,16);
+  ctx.fillStyle='#281529';ctx.fillRect(x-6,y+10,4,12);ctx.fillRect(x+2,y+10,4,12);
+  ctx.strokeStyle='#c06a8f';ctx.lineWidth=2;
+  for(let i=0;i<4;i++){ctx.beginPath();ctx.moveTo(x-4+i*3,y-15);ctx.lineTo(x-10+i*7,y-24-(i%2)*5);ctx.stroke();}
+  ctx.fillStyle='#ff5669';ctx.fillRect(x-4,y-14,2,2);ctx.fillRect(x+2,y-14,2,2);
+  if(m.alert>.4){ctx.strokeStyle='#e13b57';ctx.beginPath();ctx.arc(x,y,25+Math.sin(frame*.12)*4,0,Math.PI*2);ctx.stroke();}
+ } else if(type==='demodog'){
+  ctx.fillStyle='#210d15';ctx.fillRect(x-11,y-5,22,11);ctx.fillRect(x+5,y-10,9,8);ctx.fillRect(x+8,y+5,3,7);ctx.fillRect(x-7,y+5,3,7);
+  ctx.fillStyle='#651b2a';ctx.fillRect(x+8,y-13,7,3);ctx.fillStyle='#ff5b55';ctx.fillRect(x+11,y-7,2,2);
+  for(let i=0;i<3;i++){ctx.fillStyle='#39111d';ctx.fillRect(x-7+i*5,y-9,3,4);}
+ } else if(type==='vines'){
+  ctx.strokeStyle='#8f263c';ctx.lineWidth=4;
+  for(let i=0;i<5;i++){ctx.beginPath();ctx.moveTo(x,y+5);ctx.quadraticCurveTo(x-18+i*9,y-5,x-12+i*6,y-22-(i%2)*7);ctx.stroke();}
+  ctx.fillStyle='#e54b5c';ctx.fillRect(x-3,y-5,6,5);
+ } else {
+  ctx.fillStyle='#160d17';ctx.beginPath();ctx.ellipse(x,y+3,9,13,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#33101c';for(let i=-2;i<=2;i++){ctx.beginPath();ctx.moveTo(x+i*3,y-5);ctx.lineTo(x+i*6,y-17-Math.abs(i)*2);ctx.lineTo(x+i*2,y-8);ctx.fill();}
+  ctx.fillStyle=m.alert>.2?'#ff5a55':'#8b303b';ctx.fillRect(x-4,y-4,2,2);ctx.fillRect(x+2,y-4,2,2);
+ }
+ ctx.restore();
+}
+function updateUI(){document.getElementById('hearts').textContent=hearts?'♥ '.repeat(hearts).trim():'—';document.getElementById('parts').textContent=parts+' / 3';document.getElementById('battery').textContent=Math.max(0,Math.floor(battery))+'%';['radio','battery','fuse'].forEach(id=>document.getElementById('inv-'+id).classList.toggle('found',items.find(i=>i.id===id)?.got));}
+function say(t){document.getElementById('radio').innerHTML='<strong>RADIO:</strong> '+t;}
+function endGame(win){playing=false;won=win;gameover=!win;document.getElementById('overlay').style.display='flex';document.getElementById('ovTitle').textContent=win?'★ YOU WIN ★':'THE WOODS WENT QUIET';document.getElementById('ovText').textContent=win?`MISSION COMPLETE, ${characterLooks[selectedCharacter].name.toUpperCase()}! You escaped the Demogorgons, Demodogs, living vines and Vecna with all three radio parts. Hawkins survives another night.`:'The Upside Down swallowed the trail. The creatures found you. Restart, use the bushes to hide, and keep moving when the clock begins to chime.';document.getElementById('start').textContent=win?'PLAY AGAIN ↻':'TRY AGAIN ↻';}
+function startGame(){if(won||gameover)reset();playing=true;startTime=performance.now();document.getElementById('overlay').style.display='none';say('Multiple hostile signals detected. Find the radio parts. Hide in bushes, keep moving, and listen for the clock…');}
+function hidePlayer(){if(!playing)return;hide=hide>0?0:100;say(hide>0?'You duck into the shadows. Stay still until the footsteps pass.':'You step out of the bushes. Keep moving.');}
+function tick(now){let dt=Math.min(32,now-(lastTime||now));lastTime=now;frame++;
+ if(playing){let dx=0,dy=0;if(keys.ArrowLeft||keys.a)dx--;if(keys.ArrowRight||keys.d)dx++;if(keys.ArrowUp||keys.w)dy--;if(keys.ArrowDown||keys.s)dy++;if(dx&&dy){dx*=.707;dy*=.707;}move(dx*player.speed,dy*player.speed);if(hide>0)hide--;if(invuln>0)invuln--;if(monster.stun>0)monster.stun--;battery=Math.max(0,battery-.002);let elapsed=Math.floor((now-startTime)/1000);document.getElementById('time').textContent=String(Math.floor(elapsed/60)).padStart(2,'0')+':'+String(elapsed%60).padStart(2,'0');
+  items.forEach(it=>{if(!it.got&&Math.hypot(player.x-it.x,player.y-it.y)<17){it.got=true;parts++;say(it.id==='radio'?'You found the radio coil. One piece of the signal is coming back.':it.id==='battery'?'Fresh battery found. Your flashlight brightens.':'Fuse recovered. The radio can almost work.');if(it.id==='battery')battery=Math.min(100,battery+25);updateUI();}});
+  if(parts===3&&Math.hypot(player.x-gate.x,player.y-gate.y)<24){say('The radio sings clearly. The gate is closing!');endGame(true);}
+  if(monsters.some(m=>m.alert>.65)&&frame%150===0)say('RADIO WARNING: multiple signals detected. Do not stop moving…');
+ }
+ draw();requestAnimationFrame(tick);
+}
+document.addEventListener('keydown',e=>{let k=e.key.length===1?e.key.toLowerCase():e.key;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[k]=true;if(e.key===' '&&!e.repeat)hidePlayer();if(k==='r')reset();});
+document.addEventListener('keyup',e=>{keys[e.key.length===1?e.key.toLowerCase():e.key]=false;});
+document.querySelectorAll('[data-dir]').forEach(b=>{const dir=b.dataset.dir,lookup={up:'ArrowUp',down:'ArrowDown',left:'ArrowLeft',right:'ArrowRight'},k=lookup[dir];b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true;});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>keys[k]=false));});
+document.getElementById('touchAction').addEventListener('click',hidePlayer);
+document.querySelectorAll('[data-character]').forEach(btn=>btn.addEventListener('click',()=>{
+ selectedCharacter=btn.dataset.character;
+ document.querySelectorAll('[data-character]').forEach(b=>b.classList.toggle('selected',b===btn));
+ say('Character selected: '+characterLooks[selectedCharacter].name+'. Ready for the woods.');
+}));
+document.getElementById('start').addEventListener('click',startGame);document.getElementById('restart').addEventListener('click',reset);
+document.getElementById('hint').addEventListener('click',()=>{if(!playing){say('Start the investigation first.');return;}if(clues<=0){say('The radio has no more clues. Follow the glowing items.');return;}clues--;document.getElementById('hint').textContent='NO CLUES LEFT';let it=items.find(i=>!i.got);if(it){say('Signal direction: '+({radio:'north-west, near the old trees.',battery:'east, beyond the clearing.',fuse:'south, near the broken fence.'})[it.id]);glow(it.x,it.y,80,'#f0444b',.9);}else say('All parts recovered. Find the red gate.');});
+document.getElementById('sound').addEventListener('click',()=>{soundOn=!soundOn;document.getElementById('sound').textContent='SOUND: '+(soundOn?'ON':'OFF');say(soundOn?'Sound mode selected. (Ambient audio is not included in this build.)':'Sound off. Follow the visual clues.');});
+reset();requestAnimationFrame(tick);
+})();
+</script>
+</body></html>
